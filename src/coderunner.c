@@ -9,11 +9,11 @@
 
 
 
-#define RECORD_ERR(msg) {	\
+#define RECORD_ERR(msg, srcfile, srcline) {	\
 	int errnum;	\
 	errnum = errno;	\
 	instance->last_errno = errnum;	\
-	fprintf(stderr, "ERR: %s: %s", msg, strerror(errnum));	\
+	fprintf(stderr, "ERR: %s: %s @[%s:%d]\n", msg, strerror(errnum), srcfile, srcline);	\
 }
 
 
@@ -39,17 +39,17 @@ static int prepare_log_files(const char *datafilename_stdin, const char *logfile
 	{
 		if(-1 == (fd = open(datafilename_stdin, O_RDONLY)))
 		{
-			RECORD_ERR("failed on attempting to open STDIN file");
+			RECORD_ERR("failed on attempting to open STDIN file", __FILE__, __LINE__);
 			return 1;
 		}
 		if(-1 == close(fd))
 		{
-			RECORD_ERR("failed on attempting to close STDIN file");
+			RECORD_ERR("failed on attempting to close STDIN file", __FILE__, __LINE__);
 			return 2;
 		}
 		if(NULL == (p = realpath(datafilename_stdin, NULL)))
 		{
-			RECORD_ERR("failed on getting path of STDIN file");
+			RECORD_ERR("failed on getting path of STDIN file", __FILE__, __LINE__);
 			return 3;
 		}
 		*p_fullpath_datafile_stdin = p;
@@ -61,17 +61,17 @@ static int prepare_log_files(const char *datafilename_stdin, const char *logfile
 	{
 		if(-1 == (fd = open(logfilename_stdout, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP)))
 		{
-			RECORD_ERR("failed on attempting to open STDOUT file");
+			RECORD_ERR("failed on attempting to open STDOUT file", __FILE__, __LINE__);
 			return 11;
 		}
 		if(-1 == close(fd))
 		{
-			RECORD_ERR("failed on attempting to close STDOUT file");
+			RECORD_ERR("failed on attempting to close STDOUT file", __FILE__, __LINE__);
 			return 12;
 		}
 		if(NULL == (p = realpath(logfilename_stdout, NULL)))
 		{
-			RECORD_ERR("failed on getting path of STDOUT file");
+			RECORD_ERR("failed on getting path of STDOUT file", __FILE__, __LINE__);
 			return 13;
 		}
 		*p_fullpath_logfile_stdout = p;
@@ -85,18 +85,18 @@ static int prepare_log_files(const char *datafilename_stdin, const char *logfile
 		{
 			if(-1 == (fd = open(logfilename_stderr, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP)))
 			{
-				RECORD_ERR("failed on attempting to open STDERR file");
+				RECORD_ERR("failed on attempting to open STDERR file", __FILE__, __LINE__);
 				return 21;
 			}
 			if(-1 == close(fd))
 			{
-				RECORD_ERR("failed on attempting to close STDERR file");
+				RECORD_ERR("failed on attempting to close STDERR file", __FILE__, __LINE__);
 				return 22;
 			}
 		}
 		if(NULL == (p = realpath(logfilename_stderr, NULL)))
 		{
-			RECORD_ERR("failed on getting path of STDERR file");
+			RECORD_ERR("failed on getting path of STDERR file", __FILE__, __LINE__);
 			return 23;
 		}
 		*p_fullpath_logfile_stderr = p;
@@ -118,7 +118,7 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 
 	if(0 != check_working_directory(working_directory, &fullpath_working_directory))
 	{
-		RECORD_ERR("cannot have real path of given working directory");
+		RECORD_ERR("cannot have real path of given working directory", __FILE__, __LINE__);
 		return 1;
 	}
 
@@ -129,7 +129,7 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 
 	if(0 != chdir(working_directory))
 	{
-		RECORD_ERR("failed on changing work directory");
+		RECORD_ERR("failed on changing work directory", __FILE__, __LINE__);
 		return 1;
 	}
 
