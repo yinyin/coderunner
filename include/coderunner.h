@@ -19,6 +19,8 @@ typedef struct _T_CodeRunInstance {
 	int return_code;
 	int stop_signal;
 
+	int last_errno;
+
 	int _life_cycle_status;
 } CodeRunInstance;
 
