@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -6,6 +8,9 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+
+
+#include "coderunner.h"
 
 
 
@@ -21,7 +26,7 @@
 static int check_working_directory(const char *working_directory, char **p_fullpath_working_directory)
 {
 	char *p;
-	if(NULL == (p = readlink(working_directory, NULL)))
+	if(NULL == (p = realpath(working_directory, NULL)))
 	{ return 1; }
 
 	*p_fullpath_working_directory = p;
