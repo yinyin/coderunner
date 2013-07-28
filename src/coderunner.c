@@ -23,7 +23,7 @@
 
 
 
-static int check_working_directory(const char *working_directory, char **p_fullpath_working_directory)
+static int check_working_directory(CodeRunInstance *instance, const char *working_directory, char **p_fullpath_working_directory)
 {
 	char *p;
 	if(NULL == (p = realpath(working_directory, NULL)))
@@ -35,7 +35,7 @@ static int check_working_directory(const char *working_directory, char **p_fullp
 }
 
 
-static int prepare_log_files(const char *datafilename_stdin, const char *logfilename_stdout, const char *logfilename_stderr, char **p_fullpath_datafile_stdin, char **p_fullpath_logfile_stdout, char **p_fullpath_logfile_stderr)
+static int prepare_log_files(CodeRunInstance *instance, const char *datafilename_stdin, const char *logfilename_stdout, const char *logfilename_stderr, char **p_fullpath_datafile_stdin, char **p_fullpath_logfile_stdout, char **p_fullpath_logfile_stderr)
 {
 	int fd;
 	char *p;
@@ -121,13 +121,13 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 
 	memset(instance, 0, sizeof(CodeRunInstance));
 
-	if(0 != check_working_directory(working_directory, &fullpath_working_directory))
+	if(0 != check_working_directory(instance, working_directory, &fullpath_working_directory))
 	{
 		RECORD_ERR("cannot have real path of given working directory", __FILE__, __LINE__);
 		return 1;
 	}
 
-	if(0 != prepare_log_files(datafilename_stdin, logfilename_stdout, logfilename_stderr, &fullpath_datafile_stdin, &fullpath_logfile_stdout, &fullpath_logfile_stderr))
+	if(0 != prepare_log_files(instance, datafilename_stdin, logfilename_stdout, logfilename_stderr, &fullpath_datafile_stdin, &fullpath_logfile_stdout, &fullpath_logfile_stderr))
 	{ return 2; }
 
 
