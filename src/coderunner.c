@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <pwd.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -112,12 +113,41 @@ static int prepare_log_files(CodeRunInstance *instance, const char *datafilename
 	return 0;
 }
 
+
+static int lookup_runner_account(CodeRunInstance *instance, const char *run_as_user, uid_t *p_runner_uid, gid_t *p_runner_gid)
+{
+	struct passwd *p;
+
+	if(NULL == run_as_user)
+	{
+		*p_runner_uid = getuid();
+		*p_runner_gid = getgid();
+		return 0;
+	}
+
+	if(NULL == (p = getpwnam(run_as_user)))
+	{
+		RECORD_ERR("cannot found subject runner account", __FILE__, __LINE__);
+		return 1;
+	}
+
+	*p_runner_uid = p->pw_uid;
+	*p_runner_gid = p->pw_gid;
+	return 0;
+}
+
+
 int run_program(CodeRunInstance *instance, const char *filename, char *const argv[], char *const envp[], const char *working_directory, const char *run_as_user, const char *datafilename_stdin, const char *logfilename_stdout, const char *logfilename_stderr, uint32_t max_running_second,  uint32_t overtime_sigint_second, uint32_t overtime_sigterm_second, uint32_t error_skip)
 {
 	char *fullpath_working_directory;
+
 	char *fullpath_datafile_stdin;
 	char *fullpath_logfile_stdout;
 	char *fullpath_logfile_stderr;
+
+	uid_t runner_uid;
+	gid_t runner_gid;
+
 
 	memset(instance, 0, sizeof(CodeRunInstance));
 
@@ -129,6 +159,9 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 
 	if(0 != prepare_log_files(instance, datafilename_stdin, logfilename_stdout, logfilename_stderr, &fullpath_datafile_stdin, &fullpath_logfile_stdout, &fullpath_logfile_stderr))
 	{ return 2; }
+
+	if(0 != lookup_runner_account(instance, run_as_user, &runner_uid, &runner_gid))
+	{ return 3; }
 
 
 
