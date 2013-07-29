@@ -137,7 +137,32 @@ static int lookup_runner_account(CodeRunInstance *instance, const char *run_as_u
 }
 
 
-int run_program(CodeRunInstance *instance, const char *filename, char *const argv[], char *const envp[], const char *working_directory, const char *run_as_user, const char *datafilename_stdin, const char *logfilename_stdout, const char *logfilename_stderr, uint32_t max_running_second,  uint32_t overtime_sigint_second, uint32_t overtime_sigterm_second, uint32_t error_skip)
+static void fill_instance_structure(CodeRunInstance *instance, uint32_t max_running_second,  uint32_t overtime_sigint_second, uint32_t overtime_sigterm_second, pid_t child_pid)
+{
+	time_t current_tstamp;
+
+	if( ((time_t)(-1)) == time(&current_tstamp) )
+	{
+		RECORD_ERR("cannot get current timestamp", __FILE__, __LINE__);
+		current_tstamp = (time_t)(0);
+	}
+
+	instance->tstamp_start = current_tstamp;
+	instance->tstamp_bound = current_tstamp + ((time_t)(max_running_second));
+	instance->tstamp_finish = (time_t)(0);
+
+	instance->tstamp_lastcheck = current_tstamp;
+
+	instance->overtime_sigint_second = overtime_sigint_second;
+	instance->overtime_sigterm_second = overtime_sigterm_second;
+
+	instance->child_pid = child_pid;
+
+	return;
+}
+
+
+int run_program(CodeRunInstance *instance, const char *filename, char *const argv[], char *const envp[], const char *working_directory, const char *run_as_user, const char *datafilename_stdin, const char *logfilename_stdout, const char *logfilename_stderr, uint32_t max_running_second, uint32_t overtime_sigint_second, uint32_t overtime_sigterm_second, uint32_t error_skip)
 {
 	char *fullpath_working_directory;
 
@@ -148,6 +173,7 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 	uid_t runner_uid;
 	gid_t runner_gid;
 
+	pid_t child_pid;
 
 	memset(instance, 0, sizeof(CodeRunInstance));
 
@@ -163,6 +189,17 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 	if(0 != lookup_runner_account(instance, run_as_user, &runner_uid, &runner_gid))
 	{ return 3; }
 
+	child_pid = fork();
+	if(-1 == child_pid)
+	{
+		RECORD_ERR("failed on perform fork()", __FILE__, __LINE__);
+		return 4;
+	}
+	else if(0 == child_pid)
+	{
+		fill_instance_structure(instance, max_running_second, overtime_sigint_second, overtime_sigterm_second, child_pid);
+		return 0;
+	}
 
 
 	if(0 != chdir(working_directory))
