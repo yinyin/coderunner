@@ -24,6 +24,19 @@
 
 
 
+static void release_allocated_memory(char *fullpath_working_directory, char *fullpath_datafile_stdin, char *fullpath_logfile_stdout, char *fullpath_logfile_stderr)
+{
+#define FREE_ALLOCATED_MEMORY(p) { if(NULL != p) { free(p); } }
+	FREE_ALLOCATED_MEMORY(fullpath_working_directory);
+	FREE_ALLOCATED_MEMORY(fullpath_datafile_stdin);
+	FREE_ALLOCATED_MEMORY(fullpath_logfile_stdout);
+	FREE_ALLOCATED_MEMORY(fullpath_logfile_stderr);
+#undef FREE_ALLOCATED_MEMORY
+
+	return;
+}
+
+
 static int check_working_directory(CodeRunInstance *instance, const char *working_directory, char **p_fullpath_working_directory)
 {
 	char *p;
@@ -175,29 +188,47 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 
 	pid_t child_pid;
 
+
+	fullpath_working_directory = NULL;
+	fullpath_datafile_stdin = NULL;
+	fullpath_logfile_stdout = NULL;
+	fullpath_logfile_stderr = NULL;
+
+#define RELEASE_ALLOCATED_RESOURCE { release_allocated_memory(fullpath_working_directory, fullpath_datafile_stdin, fullpath_logfile_stdout, fullpath_logfile_stderr) }
+
+
 	memset(instance, 0, sizeof(CodeRunInstance));
 
 	if(0 != check_working_directory(instance, working_directory, &fullpath_working_directory))
 	{
 		RECORD_ERR("cannot have real path of given working directory", __FILE__, __LINE__);
+		RELEASE_ALLOCATED_RESOURCE;
 		return 1;
 	}
 
 	if(0 != prepare_log_files(instance, datafilename_stdin, logfilename_stdout, logfilename_stderr, &fullpath_datafile_stdin, &fullpath_logfile_stdout, &fullpath_logfile_stderr))
-	{ return 2; }
+	{
+		RELEASE_ALLOCATED_RESOURCE;
+		return 2;
+	}
 
 	if(0 != lookup_runner_account(instance, run_as_user, &runner_uid, &runner_gid))
-	{ return 3; }
+	{
+		RELEASE_ALLOCATED_RESOURCE;
+		return 3;
+	}
 
 	child_pid = fork();
 	if(-1 == child_pid)
 	{
 		RECORD_ERR("failed on perform fork()", __FILE__, __LINE__);
+		RELEASE_ALLOCATED_RESOURCE;
 		return 4;
 	}
 	else if(0 == child_pid)
 	{
 		fill_instance_structure(instance, max_running_second, overtime_sigint_second, overtime_sigterm_second, child_pid);
+		RELEASE_ALLOCATED_RESOURCE;
 		return 0;
 	}
 
@@ -208,6 +239,7 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 		return 1;
 	}
 
+#undef RELEASE_ALLOCATED_RESOURCE
 
 	return -1;
 }
