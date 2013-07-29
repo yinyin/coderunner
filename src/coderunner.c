@@ -194,7 +194,9 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 	fullpath_logfile_stdout = NULL;
 	fullpath_logfile_stderr = NULL;
 
-#define RELEASE_ALLOCATED_RESOURCE { release_allocated_memory(fullpath_working_directory, fullpath_datafile_stdin, fullpath_logfile_stdout, fullpath_logfile_stderr) }
+#define RELEASE_ALLOCATED_RESOURCE {	\
+	release_allocated_memory(fullpath_working_directory, fullpath_datafile_stdin, fullpath_logfile_stdout, fullpath_logfile_stderr);	\
+}
 
 
 	memset(instance, 0, sizeof(CodeRunInstance));
