@@ -228,7 +228,7 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 		RELEASE_ALLOCATED_RESOURCE;
 		return 4;
 	}
-	else if(0 == child_pid)
+	else if(0 != child_pid)
 	{
 		fill_instance_structure(instance, max_running_second, overtime_sigint_second, overtime_sigterm_second, child_pid);
 		RELEASE_ALLOCATED_RESOURCE;
