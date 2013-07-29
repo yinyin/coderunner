@@ -175,6 +175,107 @@ static void fill_instance_structure(CodeRunInstance *instance, uint32_t max_runn
 	return;
 }
 
+static int set_file_owner(CodeRunInstance *instance, int fd, uid_t runner_uid, gid_t runner_gid, const char *errmsg)
+{
+	if( (runner_uid == geteuid()) && (runner_gid == getegid()) )
+	{ return 0; }
+
+	if(-1 == fchown(fd, runner_uid, runner_gid))
+	{
+		RECORD_ERR(errmsg, __FILE__, __LINE__);
+	}
+
+	return 0;
+}
+
+static int open_log_files(CodeRunInstance *instance, const char *fullpath_datafilename_stdin, const char *fullpath_logfilename_stdout, const char *fullpath_logfilename_stderr, uid_t runner_uid, gid_t runner_gid)
+{
+	int fd;
+
+	if(NULL != fullpath_datafilename_stdin)
+	{
+		if(-1 == (fd = open(fullpath_datafilename_stdin, O_RDONLY)))
+		{
+			RECORD_ERR("failed on open STDIN file", __FILE__, __LINE__);
+			return 1;
+		}
+		if(STDIN_FILENO != fd)
+		{
+			if(STDIN_FILENO != dup2(fd, STDIN_FILENO))
+			{
+				RECORD_ERR("failed on dup file descriptor to STDIN", __FILE__, __LINE__);
+				return 2;
+			}
+			if(-1 == close(fd))
+			{
+				RECORD_ERR("failed on close user STDIN file descriptor", __FILE__, __LINE__);
+				return 3;
+			}
+		}
+	}
+
+	if(NULL != fullpath_logfilename_stdout)
+	{
+		if(-1 == (fd = open(fullpath_logfilename_stdout, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP)))
+		{
+			RECORD_ERR("failed on open STDOUT file", __FILE__, __LINE__);
+			return 11;
+		}
+		if(0 != set_file_owner(instance, fd, runner_uid, runner_gid, "cannot change file owner for STDOUT file"))
+		{ return 15; }
+		if(STDOUT_FILENO != fd)
+		{
+			if(STDOUT_FILENO != dup2(fd, STDOUT_FILENO))
+			{
+				RECORD_ERR("failed on dup file descriptor to STDOUT", __FILE__, __LINE__);
+				return 12;
+			}
+			if(-1 == close(fd))
+			{
+				RECORD_ERR("failed on close user STDOUT file descriptor", __FILE__, __LINE__);
+				return 13;
+			}
+		}
+	}
+
+	if(NULL != fullpath_logfilename_stderr)
+	{
+		if( (NULL != fullpath_logfilename_stdout) && (0 == strcmp(fullpath_logfilename_stdout, fullpath_logfilename_stderr)) )
+		{
+			if(STDERR_FILENO != dup2(STDOUT_FILENO, STDERR_FILENO))
+			{
+				RECORD_ERR("failed on dup STDOUT to STDERR", __FILE__, __LINE__);
+				return 24;
+			}
+		}
+		else
+		{
+			if(-1 == (fd = open(fullpath_logfilename_stderr, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP)))
+			{
+				RECORD_ERR("failed on open STDERR file", __FILE__, __LINE__);
+				return 21;
+			}
+			if(0 != set_file_owner(instance, fd, runner_uid, runner_gid, "cannot change file owner for STDERR file"))
+			{ return 25; }
+			if(STDERR_FILENO != fd)
+			{
+				if(STDERR_FILENO != dup2(fd, STDERR_FILENO))
+				{
+					RECORD_ERR("failed on dup file descriptor to STDERR", __FILE__, __LINE__);
+					return 22;
+				}
+				if(-1 == close(fd))
+				{
+					RECORD_ERR("failed on close user STDERR file descriptor", __FILE__, __LINE__);
+					return 23;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
 
 int run_program(CodeRunInstance *instance, const char *filename, char *const argv[], char *const envp[], const char *working_directory, const char *run_as_user, const char *datafilename_stdin, const char *logfilename_stdout, const char *logfilename_stderr, uint32_t max_running_second, uint32_t overtime_sigint_second, uint32_t overtime_sigterm_second, uint32_t error_skip)
 {
@@ -246,6 +347,11 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 	{
 		RECORD_ERR("failed on changing work directory", __FILE__, __LINE__);
 		return 1;
+	}
+
+	if(0 != open_log_files(instance, fullpath_datafile_stdin, fullpath_logfile_stdout, fullpath_logfile_stderr, runner_uid, runner_gid))
+	{
+		return 2;
 	}
 
 	/* }}} child process code */
