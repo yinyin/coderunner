@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <pwd.h>
+#include <dirent.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -277,6 +278,78 @@ static int open_log_files(CodeRunInstance *instance, const char *fullpath_datafi
 }
 
 
+static int close_fd_impl_procfs_fdfolder(CodeRunInstance *instance, const char *fdfolder_path)
+{
+	int dirfd_val;
+	DIR *dirp;
+	struct dirent *p;
+
+	if(NULL == (dirp = opendir(fdfolder_path)))
+	{
+		RECORD_ERR("cannot open file descriptor proc list", __FILE__, __LINE__);
+		return 1;
+	}
+
+	dirfd_val = dirfd(dirp);
+
+	while(NULL != (p = readdir(dirp))) {
+		int fd_val;
+		char *endp;
+		fd_val = (int)(strtol(p->d_name, &endp, 10));
+		if( (p->d_name != endp) && ('\0' == *endp) && (fd_val != dirfd_val) && (fd_val > 2) )
+		{
+			if(0 != close(fd_val))
+			{
+				char buf[64];
+				snprintf(buf, 63, "failed on close file descriptor (fd=%d)", fd_val);
+				buf[63] = '\0';
+				RECORD_ERR(buf, __FILE__, __LINE__);
+			}
+		}
+	}
+
+	if(0 != closedir(dirp))
+	{
+		RECORD_ERR("failed on close procfs file descriptor folder", __FILE__, __LINE__);
+	}
+
+	return 0;
+}
+
+static int close_fd_impl_way_to_max()
+{
+	int max_fd;
+	int fd;
+
+	max_fd = (int)(sysconf(_SC_OPEN_MAX));
+	for(fd = 3; fd < max_fd; fd++) {
+		close(fd);
+	}
+
+	return 0;
+}
+
+static void close_fd(CodeRunInstance *instance)
+{
+	int ret;
+
+	ret = -1;
+
+#if __APPLE__
+	ret = close_fd_impl_procfs_fdfolder(instance, "/dev/fd");
+#elif __linux__ || __linux
+	ret = close_fd_impl_procfs_fdfolder(instance, "/dev/self/fd");
+#endif
+
+	if(0 != ret)
+	{
+		close_fd_impl_way_to_max();
+	}
+
+	return;
+}
+
+
 int run_program(CodeRunInstance *instance, const char *filename, char *const argv[], char *const envp[], const char *working_directory, const char *run_as_user, const char *datafilename_stdin, const char *logfilename_stdout, const char *logfilename_stderr, uint32_t max_running_second, uint32_t overtime_sigint_second, uint32_t overtime_sigterm_second, uint32_t error_skip)
 {
 	char *fullpath_working_directory;
@@ -353,6 +426,8 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 	{
 		return 2;
 	}
+
+	close_fd(instance);
 
 	/* }}} child process code */
 
