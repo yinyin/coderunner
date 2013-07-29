@@ -235,12 +235,20 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 		return 0;
 	}
 
+	/* {{{ child process code */
+
+	if(0 != setpgid(0, 0))
+	{
+		RECORD_ERR("failed on creating independent process group", __FILE__, __LINE__);
+	}
 
 	if(0 != chdir(working_directory))
 	{
 		RECORD_ERR("failed on changing work directory", __FILE__, __LINE__);
 		return 1;
 	}
+
+	/* }}} child process code */
 
 #undef RELEASE_ALLOCATED_RESOURCE
 
