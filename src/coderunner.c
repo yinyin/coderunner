@@ -461,6 +461,14 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 		return 3;
 	}
 
+	fprintf(stdout, "PID: %d\n", (int)(getpid()));
+	fprintf(stdout, "WorkDirectory: [%s]\n", fullpath_working_directory);
+	fprintf(stdout, "Runner: UID=%d; GID=%d\n", (int)(runner_uid), (int)(runner_gid));
+	fprintf(stdout, "----------------\n");
+
+	execve(filename, argv, envp);
+	RECORD_ERR("cannot execute target program", __FILE__, __LINE__);
+
 	/* }}} child process code */
 
 #undef RELEASE_ALLOCATED_RESOURCE
