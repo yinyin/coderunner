@@ -350,6 +350,33 @@ static void close_fd(CodeRunInstance *instance)
 }
 
 
+static int change_account(uid_t runner_uid, gid_t runner_gid)
+{
+	if(0 != setgid(runner_gid))
+	{
+		RECORD_ERR("cannot set Group ID", __FILE__, __LINE__);
+		return 1;
+	}
+	if(0 != setegid(runner_gid))
+	{
+		RECORD_ERR("cannot set Effective Group ID", __FILE__, __LINE__);
+		return 2;
+	}
+	if(0 != setuid(runner_uid))
+	{
+		RECORD_ERR("cannot set User ID", __FILE__, __LINE__);
+		return 3;
+	}
+	if(0 != seteuid(runner_uid))
+	{
+		RECORD_ERR("cannot set Effective User ID", __FILE__, __LINE__);
+		return 4;
+	}
+
+	return 0;
+}
+
+
 int run_program(CodeRunInstance *instance, const char *filename, char *const argv[], char *const envp[], const char *working_directory, const char *run_as_user, const char *datafilename_stdin, const char *logfilename_stdout, const char *logfilename_stderr, uint32_t max_running_second, uint32_t overtime_sigint_second, uint32_t overtime_sigterm_second, uint32_t error_skip)
 {
 	char *fullpath_working_directory;
@@ -428,6 +455,11 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 	}
 
 	close_fd(instance);
+
+	if( (NULL != run_as_user) && (0 != change_account(runner_uid, runner_gid)) )
+	{
+		return 3;
+	}
 
 	/* }}} child process code */
 
