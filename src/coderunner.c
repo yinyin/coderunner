@@ -350,7 +350,7 @@ static void close_fd(CodeRunInstance *instance)
 }
 
 
-static int change_account(uid_t runner_uid, gid_t runner_gid)
+static int change_account(CodeRunInstance *instance, uid_t runner_uid, gid_t runner_gid)
 {
 	if(0 != setgid(runner_gid))
 	{
@@ -458,7 +458,7 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 
 	close_fd(instance);
 
-	if( (NULL != run_as_user) && (0 != change_account(runner_uid, runner_gid)) )
+	if( (NULL != run_as_user) && (0 != change_account(instance, runner_uid, runner_gid)) )
 	{
 		exit(19);
 		return 3;
