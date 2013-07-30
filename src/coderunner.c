@@ -135,8 +135,8 @@ static int lookup_runner_account(CodeRunInstance *instance, const char *run_as_u
 
 	if(NULL == run_as_user)
 	{
-		*p_runner_uid = getuid();
-		*p_runner_gid = getgid();
+		*p_runner_uid = geteuid();
+		*p_runner_gid = getegid();
 		return 0;
 	}
 
