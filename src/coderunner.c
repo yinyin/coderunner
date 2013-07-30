@@ -446,11 +446,13 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 	if(0 != chdir(working_directory))
 	{
 		RECORD_ERR("failed on changing work directory", __FILE__, __LINE__);
+		exit(17);
 		return 1;
 	}
 
 	if(0 != open_log_files(instance, fullpath_datafile_stdin, fullpath_logfile_stdout, fullpath_logfile_stderr, runner_uid, runner_gid))
 	{
+		exit(18);
 		return 2;
 	}
 
@@ -458,6 +460,7 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 
 	if( (NULL != run_as_user) && (0 != change_account(runner_uid, runner_gid)) )
 	{
+		exit(19);
 		return 3;
 	}
 
@@ -468,6 +471,7 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 
 	execve(filename, argv, envp);
 	RECORD_ERR("cannot execute target program", __FILE__, __LINE__);
+	exit(20);
 
 	/* }}} child process code */
 
