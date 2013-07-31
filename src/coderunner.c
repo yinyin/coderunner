@@ -338,7 +338,7 @@ static void close_fd(CodeRunInstance *instance)
 #if __APPLE__
 	ret = close_fd_impl_procfs_fdfolder(instance, "/dev/fd");
 #elif __linux__ || __linux
-	ret = close_fd_impl_procfs_fdfolder(instance, "/dev/self/fd");
+	ret = close_fd_impl_procfs_fdfolder(instance, "/proc/self/fd");
 #endif
 
 	if(0 != ret)
