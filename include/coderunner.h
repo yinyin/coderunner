@@ -3,6 +3,7 @@
 
 #include <unistd.h>
 #include <stdint.h>
+#include <time.h>
 
 typedef struct _T_CodeRunInstance {
 	time_t tstamp_start;
