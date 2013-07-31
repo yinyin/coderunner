@@ -1,0 +1,16 @@
+# cmockery pkg-config source file
+
+prefix=/opt/cmockery
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: cmockery
+Description: A lightweight library to simplify and generalize the process of writing unit tests for C applications.
+Version: 1c63f1f479463d9cb5185681cf11799e8efa9092
+Requires:
+Conflicts:
+Libs: -L${libdir} -lcmockery
+Libs.private: 
+Cflags: -I${includedir}
+
