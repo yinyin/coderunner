@@ -135,8 +135,8 @@ static int lookup_runner_account(CodeRunInstance *instance, const char *run_as_u
 
 	if(NULL == run_as_user)
 	{
-		*p_runner_uid = getuid();
-		*p_runner_gid = getgid();
+		*p_runner_uid = geteuid();
+		*p_runner_gid = getegid();
 		return 0;
 	}
 
@@ -350,7 +350,34 @@ static void close_fd(CodeRunInstance *instance)
 }
 
 
-int run_program(CodeRunInstance *instance, const char *filename, char *const argv[], char *const envp[], const char *working_directory, const char *run_as_user, const char *datafilename_stdin, const char *logfilename_stdout, const char *logfilename_stderr, uint32_t max_running_second, uint32_t overtime_sigint_second, uint32_t overtime_sigterm_second, uint32_t error_skip)
+static int change_account(CodeRunInstance *instance, uid_t runner_uid, gid_t runner_gid)
+{
+	if(0 != setgid(runner_gid))
+	{
+		RECORD_ERR("cannot set Group ID", __FILE__, __LINE__);
+		return 1;
+	}
+	if(0 != setegid(runner_gid))
+	{
+		RECORD_ERR("cannot set Effective Group ID", __FILE__, __LINE__);
+		return 2;
+	}
+	if(0 != setuid(runner_uid))
+	{
+		RECORD_ERR("cannot set User ID", __FILE__, __LINE__);
+		return 3;
+	}
+	if(0 != seteuid(runner_uid))
+	{
+		RECORD_ERR("cannot set Effective User ID", __FILE__, __LINE__);
+		return 4;
+	}
+
+	return 0;
+}
+
+
+int run_program(CodeRunInstance *instance, const char *filename, char *const argv[], char *const envp[], const char *working_directory, const char *run_as_user, const char *datafilename_stdin, const char *logfilename_stdout, const char *logfilename_stderr, uint32_t max_running_second, uint32_t overtime_sigint_second, uint32_t overtime_sigterm_second)
 {
 	char *fullpath_working_directory;
 
@@ -419,15 +446,32 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 	if(0 != chdir(working_directory))
 	{
 		RECORD_ERR("failed on changing work directory", __FILE__, __LINE__);
+		exit(17);
 		return 1;
 	}
 
 	if(0 != open_log_files(instance, fullpath_datafile_stdin, fullpath_logfile_stdout, fullpath_logfile_stderr, runner_uid, runner_gid))
 	{
+		exit(18);
 		return 2;
 	}
 
 	close_fd(instance);
+
+	if( (NULL != run_as_user) && (0 != change_account(instance, runner_uid, runner_gid)) )
+	{
+		exit(19);
+		return 3;
+	}
+
+	fprintf(stdout, "PID: %d\n", (int)(getpid()));
+	fprintf(stdout, "WorkDirectory: [%s]\n", fullpath_working_directory);
+	fprintf(stdout, "Runner: UID=%d; GID=%d\n", (int)(runner_uid), (int)(runner_gid));
+	fprintf(stdout, "----------------\n");
+
+	execve(filename, argv, envp);
+	RECORD_ERR("cannot execute target program", __FILE__, __LINE__);
+	exit(20);
 
 	/* }}} child process code */
 
