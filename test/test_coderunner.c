@@ -18,7 +18,7 @@ void test_clear_instance(void **state)
 
 	memset(&instance, 7, sizeof(CodeRunInstance));
 
-	ret = run_program(&instance, NULL, STRARRAY_SAMPLE_1, STRARRAY_SAMPLE_1, "/", NULL, NULL, NULL, NULL, 10, 10, 10, 0);
+	ret = run_program(&instance, NULL, STRARRAY_SAMPLE_1, STRARRAY_SAMPLE_1, "/", NULL, NULL, NULL, NULL, 10, 10, 10);
 
 	assert_int_equal(ret, 0);
 	assert_int_equal(instance.return_code, 0);
