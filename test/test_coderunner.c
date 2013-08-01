@@ -4,6 +4,7 @@
 #include <google/cmockery.h>
 
 #include <string.h>
+#include <sys/wait.h>
 
 #include "coderunner.h"
 
@@ -24,6 +25,13 @@ void test_clear_instance(void **state)
 	assert_int_equal(instance.return_code, 0);
 	assert_int_equal(instance.return_code, 0);
 	assert_int_equal(instance.stop_signal, 0);
+	assert_int_not_equal(instance.child_pid, 0);
+
+	if(0 != instance.child_pid)
+	{
+		int prg_status;
+		waitpid(instance.child_pid, &prg_status, 0);
+	}
 }
 
 
