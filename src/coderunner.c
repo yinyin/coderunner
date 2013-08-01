@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <pwd.h>
+#include <limits.h>
 #include <dirent.h>
 
 #include <sys/types.h>
@@ -39,10 +40,27 @@ static void release_allocated_memory(char *fullpath_working_directory, char *ful
 }
 
 
+static char *x_realpath(const char *path)
+{
+	char resolved_path[PATH_MAX];
+	char *result;
+
+	if(NULL == realpath(path, resolved_path))
+	{ return NULL; }
+
+	resolved_path[PATH_MAX-1] = '\0';
+
+	if(NULL == (result = strdup(resolved_path)))
+	{ return NULL; }
+
+	return result;
+}
+
+
 static int check_working_directory(CodeRunInstance *instance, const char *working_directory, char **p_fullpath_working_directory)
 {
 	char *p;
-	if(NULL == (p = realpath(working_directory, NULL)))
+	if(NULL == (p = x_realpath(working_directory)))
 	{ return 1; }
 
 	*p_fullpath_working_directory = p;
@@ -68,7 +86,7 @@ static int prepare_log_files(CodeRunInstance *instance, const char *datafilename
 			RECORD_ERR("failed on attempting to close STDIN file", __FILE__, __LINE__);
 			return 2;
 		}
-		if(NULL == (p = realpath(datafilename_stdin, NULL)))
+		if(NULL == (p = x_realpath(datafilename_stdin)))
 		{
 			RECORD_ERR("failed on getting path of STDIN file", __FILE__, __LINE__);
 			return 3;
@@ -90,7 +108,7 @@ static int prepare_log_files(CodeRunInstance *instance, const char *datafilename
 			RECORD_ERR("failed on attempting to close STDOUT file", __FILE__, __LINE__);
 			return 12;
 		}
-		if(NULL == (p = realpath(logfilename_stdout, NULL)))
+		if(NULL == (p = x_realpath(logfilename_stdout)))
 		{
 			RECORD_ERR("failed on getting path of STDOUT file", __FILE__, __LINE__);
 			return 13;
@@ -115,7 +133,7 @@ static int prepare_log_files(CodeRunInstance *instance, const char *datafilename
 				return 22;
 			}
 		}
-		if(NULL == (p = realpath(logfilename_stderr, NULL)))
+		if(NULL == (p = x_realpath(logfilename_stderr)))
 		{
 			RECORD_ERR("failed on getting path of STDERR file", __FILE__, __LINE__);
 			return 23;
