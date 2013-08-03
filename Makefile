@@ -19,13 +19,13 @@ src/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 test/%.o: src/%.c
-	$(CC) -DDEBUG $(CFLAGS) $(CMOCKERY_CFLAGS) -c $< -o $@
+	$(CC) -DDEBUG -g $(CFLAGS) $(CMOCKERY_CFLAGS) -c $< -o $@
 
 
 test: $(TEST_BINARIES)
 
 test/test_coderunner: test/test_coderunner.c $(CODERUNNER_DEBUG_OBJ) $(CODERUNNER_HEADER)
-	$(CC) $(CFLAGS) $(CMOCKERY_CFLAGS) $< $(CODERUNNER_DEBUG_OBJ) -o $@ $(CMOCKERY_LIBS)
+	$(CC) -g $(CFLAGS) $(CMOCKERY_CFLAGS) $< $(CODERUNNER_DEBUG_OBJ) -o $@ $(CMOCKERY_LIBS)
 
 
 clean:
