@@ -13,6 +13,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#if UNIT_TESTING
+#include <setjmp.h>
+#include <google/cmockery.h>
+#endif	/* UNIT_TESTING */
 
 #include "coderunner.h"
 
