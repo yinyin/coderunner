@@ -1,5 +1,6 @@
 
 *.o
+test/*.dSYM
 
 test/test_coderunner
 
