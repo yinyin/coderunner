@@ -3,7 +3,7 @@ CMOCKERY_CFLAGS = `pkg-config --cflags cmockery`
 CMOCKERY_LIBS = `pkg-config --libs cmockery`
 
 CFLAGS += -Iinclude -Wall
-
+CFLAGS_TEST = -DUNIT_TESTING=1 -g $(CFLAGS)
 
 CODERUNNER_SRC = src/coderunner.c
 CODERUNNER_HEADER = include/coderunner.h
@@ -19,7 +19,7 @@ src/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 test/%.o: src/%.c
-	$(CC) -DDEBUG -g $(CFLAGS) $(CMOCKERY_CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS_TEST) $(CMOCKERY_CFLAGS) -c $< -o $@
 
 
 test: $(TEST_BINARIES)
