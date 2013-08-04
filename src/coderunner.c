@@ -585,18 +585,18 @@ static void update_exit_code(CodeRunInstance *instance, int prg_exitcode)
 int wait_program(CodeRunInstance *instance, int blocking_wait)
 {
 	time_t current_tstamp;
-	int retcode;
+	pid_t retpid;
 	int prg_status;
 
 	current_tstamp = update_lastcheck_tstamp(instance);
 
-	if( -1 == (retcode = waitpid(instance->child_pid, &prg_status, ((0 == blocking_wait) ? WNOHANG : 0))) )
+	if( ((pid_t)(-1)) == (retpid = waitpid(instance->child_pid, &prg_status, ((0 == blocking_wait) ? WNOHANG : 0))) )
 	{
 		RECORD_ERR("failed on waitpid", __FILE__, __LINE__);
 		return 2;
 	}
 
-	if(0 == retcode)
+	if( ((pid_t)(0)) == retpid)
 	{
 		if(current_tstamp > instance->tstamp_bound)
 		{
