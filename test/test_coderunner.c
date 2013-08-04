@@ -12,20 +12,27 @@
 char *const STRARRAY_SAMPLE_1[] = {
 	"sample-1", NULL};
 
+
+void run_program_w_empty_pointer(void **state, CodeRunInstance *instance)
+{
+	int ret;
+
+	memset(instance, 7, sizeof(CodeRunInstance));
+
+	ret = run_program(instance, NULL, STRARRAY_SAMPLE_1, STRARRAY_SAMPLE_1, "/", NULL, NULL, NULL, NULL, 10, 10, 10);
+
+	assert_int_equal(ret, 0);
+	assert_int_equal(instance->return_code, 0);
+	assert_int_equal(instance->return_code, 0);
+	assert_int_equal(instance->stop_signal, 0);
+	assert_int_not_equal(instance->child_pid, 0);
+}
+
 void test_clear_instance(void **state)
 {
 	CodeRunInstance instance;
-	int ret;
 
-	memset(&instance, 7, sizeof(CodeRunInstance));
-
-	ret = run_program(&instance, NULL, STRARRAY_SAMPLE_1, STRARRAY_SAMPLE_1, "/", NULL, NULL, NULL, NULL, 10, 10, 10);
-
-	assert_int_equal(ret, 0);
-	assert_int_equal(instance.return_code, 0);
-	assert_int_equal(instance.return_code, 0);
-	assert_int_equal(instance.stop_signal, 0);
-	assert_int_not_equal(instance.child_pid, 0);
+	run_program_w_empty_pointer(state, &instance);
 
 	if(0 != instance.child_pid)
 	{
