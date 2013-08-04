@@ -61,6 +61,18 @@ static char *x_realpath(const char *path)
 }
 
 
+static void get_current_tstamp(time_t *p_current_tstamp)
+{
+	if( ((time_t)(-1)) == time(p_current_tstamp) )
+	{
+		RECORD_ERR("cannot get current timestamp", __FILE__, __LINE__);
+		*p_current_tstamp = (time_t)(0);
+	}
+
+	return;
+}
+
+
 static int check_working_directory(CodeRunInstance *instance, const char *working_directory, char **p_fullpath_working_directory)
 {
 	char *p;
@@ -178,11 +190,7 @@ static void fill_instance_structure(CodeRunInstance *instance, uint32_t max_runn
 {
 	time_t current_tstamp;
 
-	if( ((time_t)(-1)) == time(&current_tstamp) )
-	{
-		RECORD_ERR("cannot get current timestamp", __FILE__, __LINE__);
-		current_tstamp = (time_t)(0);
-	}
+	get_current_tstamp(&current_tstamp);
 
 	instance->tstamp_start = current_tstamp;
 	instance->tstamp_bound = current_tstamp + ((time_t)(max_running_second));
