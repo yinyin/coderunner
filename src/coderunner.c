@@ -61,7 +61,7 @@ static char *x_realpath(const char *path)
 }
 
 
-static time_t get_current_tstamp()
+static time_t get_current_tstamp(CodeRunInstance *instance)
 {
 	time_t current_tstamp;
 
@@ -192,7 +192,7 @@ static void fill_instance_structure(CodeRunInstance *instance, uint32_t max_runn
 {
 	time_t current_tstamp;
 
-	current_tstamp = get_current_tstamp();
+	current_tstamp = get_current_tstamp(instance);
 
 	instance->tstamp_start = current_tstamp;
 	instance->tstamp_bound = current_tstamp + ((time_t)(max_running_second));
