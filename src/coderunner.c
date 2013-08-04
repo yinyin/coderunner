@@ -9,6 +9,7 @@
 #include <pwd.h>
 #include <limits.h>
 #include <dirent.h>
+#include <signal.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -28,6 +29,12 @@
 	instance->last_errno = errnum;	\
 	fprintf(stderr, "ERR: %s: %s @[%s:%d]\n", msg, strerror(errnum), srcfile, srcline);	\
 }
+
+
+#define PROGRAM_LIFECYCLE_NORMAL 0
+#define PROGRAM_LIFECYCLE_SIGINTED 1
+#define PROGRAM_LIFECYCLE_SIGTERMED 2
+#define PROGRAM_LIFECYCLE_SIGKILLED 3
 
 
 
@@ -510,6 +517,96 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 #undef RELEASE_ALLOCATED_RESOURCE
 
 	return -1;
+}
+
+
+
+static time_t update_lastcheck_tstamp(CodeRunInstance *instance)
+{
+	time_t current_tstamp;
+
+	if( (time_t)(0) != (current_tstamp = get_current_tstamp(instance)) )
+	{
+		instance->tstamp_lastcheck = current_tstamp;
+	}
+
+	return current_tstamp;
+}
+
+
+static void stop_program_impl(CodeRunInstance *instance, time_t current_tstamp)
+{
+	if( (PROGRAM_LIFECYCLE_NORMAL == instance->_life_cycle_status) || (current_tstamp < instance->tstamp_onstop_sigint) )
+	{
+		instance->_life_cycle_status = PROGRAM_LIFECYCLE_SIGINTED;
+		if(0 != killpg(instance->child_pid, SIGINT))
+		{
+			RECORD_ERR("cannot send SIGINT to child process", __FILE__, __LINE__);
+			return 1;
+		}
+	}
+	else if( (PROGRAM_LIFECYCLE_SIGINTED == instance->_life_cycle_status) || (current_tstamp < instance->tstamp_onstop_sigterm) )
+	{
+		instance->_life_cycle_status = PROGRAM_LIFECYCLE_SIGTERMED;
+		if(0 != killpg(instance->child_pid, SIGTERM))
+		{
+			RECORD_ERR("cannot send SIGTERM to child process", __FILE__, __LINE__);
+			return 2;
+		}
+	}
+	else
+	{
+		instance->_life_cycle_status = PROGRAM_LIFECYCLE_SIGKILLED;
+		if(0 != killpg(instance->child_pid, SIGKILL))
+		{
+			RECORD_ERR("cannot send SIGKILL to child process", __FILE__, __LINE__);
+			return 3;
+		}
+	}
+
+	return 0;
+}
+
+static void update_exit_code(CodeRunInstance *instance, int prg_exitcode)
+{
+	if(WIFEXITED(prg_exitcode))
+	{
+		instance->return_code = WEXITSTATUS(prg_exitcode);
+		instance->stop_signal = -1;
+	}
+	else
+	{
+		instance->return_code = -1;
+		instance->stop_signal = WTERMSIG(prg_exitcode);
+	}
+}
+
+int wait_program(CodeRunInstance *instance, int blocking_wait)
+{
+	time_t current_tstamp;
+	int retcode;
+	int prg_status;
+
+	current_tstamp = update_lastcheck_tstamp(instance);
+
+	if( -1 == (retcode = waitpid(instance->child_pid, &prg_status, ((0 == blocking_wait) ? WNOHANG : 0))) )
+	{
+		RECORD_ERR("failed on waitpid", __FILE__, __LINE__);
+		return 2;
+	}
+
+	if(0 == retcode)
+	{
+		if(current_tstamp > instance->tstamp_bound)
+		{
+			stop_program_impl(instance, current_tstamp);
+		}
+		return 1;
+	}
+
+	update_exit_code(instance, prg_status);
+
+	return 0;
 }
 
 
