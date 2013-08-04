@@ -31,6 +31,8 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 
 int wait_program(CodeRunInstance *instance, int blocking_wait);
 
+int stop_program(CodeRunInstance *instance);
+
 
 
 #endif	/* __X_CODERUNNER_CODERUNNER_H__ */
