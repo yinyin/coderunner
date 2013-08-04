@@ -534,7 +534,7 @@ static time_t update_lastcheck_tstamp(CodeRunInstance *instance)
 }
 
 
-static void stop_program_impl(CodeRunInstance *instance, time_t current_tstamp)
+static int stop_program_impl(CodeRunInstance *instance, time_t current_tstamp)
 {
 	if( (PROGRAM_LIFECYCLE_NORMAL == instance->_life_cycle_status) || (current_tstamp < instance->tstamp_onstop_sigint) )
 	{
@@ -580,6 +580,7 @@ static void update_exit_code(CodeRunInstance *instance, int prg_exitcode)
 		instance->stop_signal = WTERMSIG(prg_exitcode);
 	}
 }
+
 
 int wait_program(CodeRunInstance *instance, int blocking_wait)
 {
