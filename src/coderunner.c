@@ -606,6 +606,7 @@ int wait_program(CodeRunInstance *instance, int blocking_wait)
 	}
 
 	update_exit_code(instance, prg_status);
+	instance->tstamp_finish = current_tstamp;
 
 	return 0;
 }
