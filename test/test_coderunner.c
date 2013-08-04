@@ -29,6 +29,13 @@ void run_program_w_empty_pointer(void **state, CodeRunInstance *instance)
 	assert_int_not_equal(instance->child_pid, 0);
 }
 
+void verify_program_w_empty_pointer(void **state, CodeRunInstance *instance)
+{
+	assert_int_equal(instance->return_code, 20);
+	assert_int_equal(instance->stop_signal, -1);
+}
+
+
 void test_clear_instance(void **state)
 {
 	CodeRunInstance instance;
@@ -45,18 +52,15 @@ void test_clear_instance(void **state)
 void test_clear_instance_blocking_wait(void **state)
 {
 	CodeRunInstance instance_obj;
-	CodeRunInstance *instance;
 	int retcode;
-
-	instance = &instance_obj;
 
 	run_program_w_empty_pointer(state, &instance_obj);
 
 	retcode = wait_program(&instance_obj, 1);
 
 	assert_int_equal(retcode, 0);
-	assert_int_equal(instance->return_code, 20);
-	assert_int_equal(instance->stop_signal, -1);
+
+	verify_program_w_empty_pointer(state, &instance_obj);
 }
 
 
