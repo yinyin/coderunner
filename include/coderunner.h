@@ -12,8 +12,8 @@ typedef struct _T_CodeRunInstance {
 
 	time_t tstamp_lastcheck;
 
-	time_t tstamp_overtime_sigint;
-	time_t tstamp_overtime_sigterm;
+	time_t tstamp_onstop_sigint;
+	time_t tstamp_onstop_sigterm;
 
 	pid_t child_pid;
 

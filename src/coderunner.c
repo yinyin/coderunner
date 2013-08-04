@@ -200,8 +200,8 @@ static void fill_instance_structure(CodeRunInstance *instance, uint32_t max_runn
 
 	instance->tstamp_lastcheck = current_tstamp;
 
-	instance->tstamp_overtime_sigint = current_tstamp + ((time_t)(overtime_sigint_second));
-	instance->tstamp_overtime_sigterm = current_tstamp + ((time_t)(overtime_sigterm_second));
+	instance->tstamp_onstop_sigint = current_tstamp + ((time_t)(overtime_sigint_second));
+	instance->tstamp_onstop_sigterm = current_tstamp + ((time_t)(overtime_sigterm_second));
 
 	instance->child_pid = child_pid;
 
