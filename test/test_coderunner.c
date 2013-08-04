@@ -64,6 +64,27 @@ void test_clear_instance_blocking_wait(void **state)
 	verify_program_w_empty_pointer(state, &instance_obj);
 }
 
+void test_clear_instance_nonblocking_wait(void **state)
+{
+	CodeRunInstance instance_obj;
+	CodeRunInstance *instance;
+	int retcode;
+
+	instance = &instance_obj;
+
+	run_program_w_empty_pointer(state, &instance_obj);
+
+	while(0 != (retcode = wait_program(&instance_obj, 0))) {
+		assert_int_equal(retcode, 1);
+		assert_int_equal(instance->return_code, 0);
+		assert_int_equal(instance->stop_signal, 0);
+		assert_int_equal(instance->tstamp_finish, 0);
+		sleep(1);
+	}
+
+	verify_program_w_empty_pointer(state, &instance_obj);
+}
+
 
 
 int main(int argc, char* argv[])
@@ -71,6 +92,7 @@ int main(int argc, char* argv[])
 	const UnitTest tests[] = {
 		unit_test(test_clear_instance),
 		unit_test(test_clear_instance_blocking_wait),
+		unit_test(test_clear_instance_nonblocking_wait),
 	};
 	return run_tests(tests);
 }
