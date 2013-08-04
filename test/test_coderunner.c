@@ -33,6 +33,7 @@ void verify_program_w_empty_pointer(void **state, CodeRunInstance *instance)
 {
 	assert_int_equal(instance->return_code, 20);
 	assert_int_equal(instance->stop_signal, -1);
+	assert_int_not_equal(instance->tstamp_finish, 0);
 }
 
 
