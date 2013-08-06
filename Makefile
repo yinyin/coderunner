@@ -11,6 +11,7 @@ CODERUNNER_RELEASE_OBJ = $(patsubst src/%.c, src/%.o, $(CODERUNNER_SRC))
 CODERUNNER_DEBUG_OBJ = $(patsubst src/%.c, test/%.o, $(CODERUNNER_SRC))
 
 TEST_BINARIES = test/test_coderunner
+TEST_DATAEXE = test/td1
 
 
 all: test
@@ -22,15 +23,21 @@ test/%.o: src/%.c
 	$(CC) $(CFLAGS_TEST) $(CMOCKERY_CFLAGS) -c $< -o $@
 
 
-test: $(TEST_BINARIES)
+test/td1: test/td1.c
+	$(CC) -o $@ $<
+
+
+test: $(TEST_DATAEXE) $(TEST_BINARIES)
 
 test/test_coderunner: test/test_coderunner.c $(CODERUNNER_DEBUG_OBJ) $(CODERUNNER_HEADER)
 	$(CC) -g $(CFLAGS) $(CMOCKERY_CFLAGS) $< $(CODERUNNER_DEBUG_OBJ) -o $@ $(CMOCKERY_LIBS)
 
 
+
 clean:
 	$(RM) $(CODERUNNER_RELEASE_OBJ)
 	$(RM) $(CODERUNNER_DEBUG_OBJ)
+	$(RM) $(TEST_DATAEXE)
 	$(RM) $(TEST_BINARIES)
 
 
