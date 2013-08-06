@@ -29,20 +29,20 @@ int main(int argc, char *argv[])
 
 	if(0 == (noprint_flag & 1))
 	{
-		char *p;
-		p = getenv("ENV1");
-		printf("E1: %s\n", (NULL == p) ? "-" : p);
-		p = getenv("ENV2");
-		printf("E2: %s\n", (NULL == p) ? "-" : p);
-	}
-
-	if(0 == (noprint_flag & 2))
-	{
 		struct passwd *w;
 		w = getpwuid(getuid());
 		printf("Un: %s\n", (NULL == w) ? "?" : w->pw_name);
 		w = getpwuid(geteuid());
 		printf("Ue: %s\n", (NULL == w) ? "?" : w->pw_name);
+	}
+
+	if(0 == (noprint_flag & 2))
+	{
+		char *p;
+		p = getenv("ENV1");
+		printf("E1: %s\n", (NULL == p) ? "-" : p);
+		p = getenv("ENV2");
+		printf("E2: %s\n", (NULL == p) ? "-" : p);
 	}
 
 	if(0 == (noprint_flag & 4))
