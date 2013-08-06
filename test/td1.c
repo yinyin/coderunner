@@ -9,13 +9,24 @@
 
 int main(int argc, char *argv[])
 {
+	int noprint_flag;
+
+	noprint_flag = 0;
+
 	{
 		int i;
 		for(i = 1; i < argc; i++) {
 			printf("A: %s\n", argv[i]);
 		}
+
+		if( (argc > 1) && ('N' == argv[1][0]) )
+		{
+			noprint_flag = (int)(argv[1][1] - '0');
+			printf("NPRT: %d\n", noprint_flag);
+		}
 	}
 
+	if(0 == (noprint_flag & 1))
 	{
 		char *p;
 		p = getenv("ENV1");
@@ -24,6 +35,7 @@ int main(int argc, char *argv[])
 		printf("E2: %s\n", (NULL == p) ? "-" : p);
 	}
 
+	if(0 == (noprint_flag & 2))
 	{
 		struct passwd *w;
 		w = getpwuid(getuid());
