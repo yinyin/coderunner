@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <pwd.h>
+#include <limits.h>
 
 #include <sys/types.h>
 
@@ -42,6 +43,18 @@ int main(int argc, char *argv[])
 		printf("Un: %s\n", (NULL == w) ? "?" : w->pw_name);
 		w = getpwuid(geteuid());
 		printf("Ue: %s\n", (NULL == w) ? "?" : w->pw_name);
+	}
+
+	if(0 == (noprint_flag & 4))
+	{
+		char buf[PATH_MAX];
+		if(NULL == getcwd(buf, PATH_MAX))
+		{ printf("PWD: -\n"); }
+		else
+		{
+			buf[PATH_MAX-1] = '\0';
+			printf("PWD: %s\n", buf);
+		}
 	}
 
 	fprintf(stderr, "Output to STDERR.\n");
