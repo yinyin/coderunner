@@ -56,6 +56,8 @@ static PyMethodDef coderunner_ChildProcess_methods[] = {
 		"Blocking wait for program stop. Return True on program stopped." },
 	{"wait_nonblocking", (PyCFunction)ChildProcess_wait_nonblocking, METH_NOARGS,
 		"Blocking wait for program stop. Return True on program stopped, False if program still running." },
+	{"wait_nonblocking", (PyCFunction)ChildProcess_stop, METH_NOARGS,
+		"Stop running program. Need call wait_* method after invoke this method to collect exit code." },
 	{NULL}  /* Sentinel */
 };
 

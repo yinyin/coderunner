@@ -22,6 +22,7 @@ static int ChildProcess_init(coderunner_ChildProcessObject *self, PyObject *args
 
 static PyObject * ChildProcess_wait_blocking(coderunner_ChildProcessObject *self);
 static PyObject * ChildProcess_wait_nonblocking(coderunner_ChildProcessObject *self);
+static PyObject * ChildProcess_stop(coderunner_ChildProcessObject *self);
 /* }}} forward declares */
 
 
@@ -355,6 +356,20 @@ static PyObject * ChildProcess_wait_blocking(coderunner_ChildProcessObject *self
 static PyObject * ChildProcess_wait_nonblocking(coderunner_ChildProcessObject *self)
 {
 	return _ChildProcess_wait_impl(self, 0);
+}
+
+
+static PyObject * ChildProcess_stop(coderunner_ChildProcessObject *self)
+{
+	int retcode;
+
+	retcode = stop_program(&(self->childprocess_instance));
+
+	if(0 == retcode)
+	{ Py_RETURN_TRUE; }
+
+	_report_error(PyExc_RuntimeError, "ERR: failed on stop program (retcode=%d, errno=%d). @[%s:%d]", retcode, self->childprocess_instance.last_errno, __FILE__, __LINE__);
+	return NULL;
 }
 
 
