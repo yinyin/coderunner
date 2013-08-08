@@ -1,6 +1,7 @@
 
 *.o
 test/*.dSYM
+build/
 
 test/td1
 
