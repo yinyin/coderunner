@@ -355,7 +355,7 @@ static int close_fd_impl_procfs_fdfolder(CodeRunInstance *instance, const char *
 	return 0;
 }
 
-static int close_fd_impl_way_to_max()
+static int close_fd_impl_way_to_max(void)
 {
 	int max_fd;
 	int fd;
