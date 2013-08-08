@@ -33,9 +33,9 @@ static int _ChildProcess_prepare_arg(char *arg_buffer, char *arg_v[], PyObject *
 	int v_count;
 	int v_remain;
 
-	if( (NULL == arg_obj) || (!PyIter_Check(arg_obj)) )
+	if(NULL == arg_obj)
 	{
-		_report_error(PyExc_TypeError, "ERR: given \"args\" parameter not support iterator interface. @[%s:%d]", __FILE__, __LINE__);
+		_report_error(PyExc_TypeError, "ERR: given \"args\" parameter is empty. @[%s:%d]", arg_obj, __FILE__, __LINE__);
 		return -1;
 	}
 
