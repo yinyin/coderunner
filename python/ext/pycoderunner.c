@@ -15,7 +15,7 @@
 #define ____CODE_INDICATOR_05a04832113c7891f7e5dffd4ef5a9a396a25058 1
 
 
-PyMODINIT_FUNC initpycoderunner(void);
+PyMODINIT_FUNC initcoderunner(void);
 
 
 static void _report_error(PyObject *errtype, const char *format, ...)
@@ -138,7 +138,7 @@ static PyMethodDef coderunner_functions[] = {
 };
 
 
-PyMODINIT_FUNC initbasemessage(void)
+PyMODINIT_FUNC initcoderunner(void)
 {
 	PyObject* m;
 
