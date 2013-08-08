@@ -588,6 +588,9 @@ int wait_program(CodeRunInstance *instance, int blocking_wait)
 	pid_t retpid;
 	int prg_status;
 
+	if((time_t)(0) != instance->tstamp_finish)
+	{ return 0; }
+
 	current_tstamp = update_lastcheck_tstamp(instance);
 
 	if( ((pid_t)(-1)) == (retpid = waitpid(instance->child_pid, &prg_status, ((0 == blocking_wait) ? WNOHANG : 0))) )
