@@ -620,6 +620,9 @@ int stop_program(CodeRunInstance *instance)
 {
 	time_t current_tstamp;
 
+	if((time_t)(0) != instance->tstamp_finish)
+	{ return 0; }
+
 	current_tstamp = get_current_tstamp(instance);
 
 	instance->tstamp_onstop_sigint = (instance->tstamp_onstop_sigint - instance->tstamp_bound) + current_tstamp;
