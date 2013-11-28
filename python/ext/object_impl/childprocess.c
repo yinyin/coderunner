@@ -64,7 +64,7 @@ static int _ChildProcess_prepare_arg(char *arg_buffer, char *arg_v[], PyObject *
 			int l_arg;
 			int l_total;
 
-			l_arg = strlen(p);
+			l_arg = (int)strlen(p);
 			l_total = l_arg + 1;
 
 			if(v_remain < l_total)
@@ -179,14 +179,14 @@ static int _ChildProcess_prepare_env(char *env_buffer, char *env_p[], PyObject *
 
 			if(NULL == env_value)
 			{
-				l_name = strlen(env_name);
+				l_name = (int)strlen(env_name);
 				l_value = 0;
 				l_total = + 1;
 			}
 			else
 			{
-				l_name = strlen(env_name);
-				l_value = strlen(env_value);
+				l_name = (int)strlen(env_name);
+				l_value = (int)strlen(env_value);
 				l_total = l_name + l_value + 2;
 			}
 
