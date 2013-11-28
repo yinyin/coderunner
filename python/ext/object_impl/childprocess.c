@@ -10,6 +10,10 @@
 #define MAX_ARGUMENT_COUNT (511+1)
 #define MAX_ENVIRONMENT_BUFFER_SIZE 8192
 #define MAX_ENVIRONMENT_COUNT (511+1)
+#define EXTERNAL_STRING_LENGTH_GUARD_MASK 0x7FFF
+/* EXTERNAL_STRING_LENGTH_GUARD_MASK will limit the length of every arguments from command line and
+ * length of name and value of environment variable. 0x7FFF = 32767 should large enough.
+** */
 
 #define CHILDPROCESS_BUFFER_ALLIGN 4
 #define CHILDPROCESS_BUFFER_ALLIGN_MASK (CHILDPROCESS_BUFFER_ALLIGN - 1)
@@ -64,7 +68,7 @@ static int _ChildProcess_prepare_arg(char *arg_buffer, char *arg_v[], PyObject *
 			int l_arg;
 			int l_total;
 
-			l_arg = (int)strlen(p);
+			l_arg = (int)(strlen(p) & EXTERNAL_STRING_LENGTH_GUARD_MASK);
 			l_total = l_arg + 1;
 
 			if(v_remain < l_total)
@@ -179,14 +183,14 @@ static int _ChildProcess_prepare_env(char *env_buffer, char *env_p[], PyObject *
 
 			if(NULL == env_value)
 			{
-				l_name = (int)strlen(env_name);
+				l_name = (int)(strlen(env_name) & EXTERNAL_STRING_LENGTH_GUARD_MASK);
 				l_value = 0;
-				l_total = + 1;
+				l_total = l_name + 1;
 			}
 			else
 			{
-				l_name = (int)strlen(env_name);
-				l_value = (int)strlen(env_value);
+				l_name = (int)(strlen(env_name) & EXTERNAL_STRING_LENGTH_GUARD_MASK);
+				l_value = (int)(strlen(env_value) & EXTERNAL_STRING_LENGTH_GUARD_MASK);
 				l_total = l_name + l_value + 2;
 			}
 
