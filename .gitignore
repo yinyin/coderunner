@@ -2,6 +2,7 @@
 *.o
 test/*.dSYM
 build/
+a.out
 
 test/td1
 
