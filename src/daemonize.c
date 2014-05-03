@@ -8,6 +8,7 @@ typedef struct _T_DaemonizeOption {
 
 	char path_pidfile[128];
 
+	char run_as[32];
 	char path_workfolder[128];
 	char path_terminallogfile[128];
 
@@ -24,6 +25,7 @@ ARGHASH_WORKDIR_LONG	--working-dir=
 ARGHASH_WORKDIR_SHORT	--wd=
 ARGHASH_TRMLOG_LONG		--log=
 ARGHASH_TRMLOG_SHORT	--terminal-log=/dev/null
+ARGHASH_RUN_AS			--run-as=
 ARGHASH_SEND_INT_BEFORE_TERM	--send-int-before-term=
 ARGHASH_VERBOSE_LONG	--verbose
 ARGHASH_VERBOSE_SHORT	-v
@@ -40,6 +42,7 @@ ARGHASH_ACT_CHECK		check
 #define ARGHASH_WORKDIR_SHORT 0xE31BB564
 #define ARGHASH_TRMLOG_LONG 0x993FB47F
 #define ARGHASH_TRMLOG_SHORT 0x6A9BDAE0
+#define ARGHASH_RUN_AS 0xC90C372B
 #define ARGHASH_SEND_INT_BEFORE_TERM 0x33419A50
 #define ARGHASH_VERBOSE_LONG 0x4CF1F27F
 #define ARGHASH_VERBOSE_SHORT 0x59CD76CA
