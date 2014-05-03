@@ -1,6 +1,23 @@
 #include <stdint.h>
 #include <stdio.h>
 
+
+
+typedef struct _T_DaemonizeOption {
+	uint32_t action_code;	/* use argument hash as action code */
+
+	char path_pidfile[128];
+
+	char path_workfolder[128];
+	char path_terminallogfile[128];
+
+	uint32_t second_int_before_term;
+
+	uint8_t is_verbose;
+} DaemonizeOption;
+
+
+
 /*
 ARGHASH_PIDFILE			--pid=
 ARGHASH_WORKDIR_LONG	--working-dir=
