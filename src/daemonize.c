@@ -3,14 +3,21 @@
 
 
 
+#define PATH_BUFFER_LEN 128
+#define USERACCOUNT_BUFFER_LEN 32
+
 typedef struct _T_DaemonizeOption {
 	uint32_t action_code;	/* use argument hash as action code */
 
-	char path_pidfile[128];
+	char *path_pidfile;
+	char buffer_path_pidfile[PATH_BUFFER_LEN];
 
-	char run_as[32];
-	char path_workfolder[128];
-	char path_terminallogfile[128];
+	char *run_as_user;
+	char *path_workfolder;
+	char *path_terminallogfile;
+	char buffer_run_as_user[USERACCOUNT_BUFFER_LEN];
+	char buffer_path_workfolder[PATH_BUFFER_LEN];
+	char buffer_path_terminallogfile[PATH_BUFFER_LEN];
 
 	uint32_t second_int_before_term;
 
@@ -55,7 +62,7 @@ ARGHASH_ACT_CHECK		check
 /* }}} generated argument hash */
 
 
-uint32_t arg_hash(char *p, char **stop_pointer)
+static uint32_t arg_hash(char *p, char **stop_pointer)
 {
 	uint32_t result;
 	char ch;
@@ -78,6 +85,79 @@ uint32_t arg_hash(char *p, char **stop_pointer)
 	*stop_pointer = p;
 	return result;
 }
+
+
+#define cmdoptcpy(buffer_ptr, value_ptr, arg, buffer_len) {	\
+			strncpy(buffer_ptr, arg, buffer_len);	\
+			buffer_ptr[(buffer_len-1)] = '\0';		\
+			value_ptr = (('\0' == buffer_ptr[0]) ? NULL : buffer_ptr);	}
+
+static int parse_command_arg(DaemonizeOption *cmdarg, int argc, char **argv)
+{
+	int i;
+
+	for(i = 1; i < argc; i++) {
+		uint32_t opt;
+		char *arg;
+
+		opt = arg_hash(argv[i], &arg);
+		switch(opt)
+		{
+		case ARGHASH_PIDFILE:
+			cmdoptcpy(cmdarg->buffer_path_pidfile, cmdarg->path_pidfile, arg, PATH_BUFFER_LEN);
+			break;
+		case ARGHASH_WORKDIR_LONG:
+		case ARGHASH_WORKDIR_SHORT:
+			cmdoptcpy(cmdarg->buffer_path_workfolder, cmdarg->path_workfolder, arg, PATH_BUFFER_LEN);
+			break;
+		case ARGHASH_TRMLOG_LONG:
+		case ARGHASH_TRMLOG_SHORT:
+			cmdoptcpy(cmdarg->buffer_path_terminallogfile, cmdarg->path_terminallogfile, arg, PATH_BUFFER_LEN);
+			break;
+		case ARGHASH_RUN_AS:
+			cmdoptcpy(cmdarg->buffer_run_as_user, cmdarg->run_as_user, arg, USERACCOUNT_BUFFER_LEN);
+			break;
+		case ARGHASH_SEND_INT_BEFORE_TERM:
+			{
+				long int aux;
+				char *endptr;
+				aux = strtol(arg, &endptr, 10);
+				if( ('\0' != *endptr) || (aux < 0) || (aux > 120) )
+				{
+					fprintf(stderr, "ERR: invalid argument for --send-int-before-term=\n");
+					return 1;
+				}
+				cmdarg->second_int_before_term = aux;
+			}
+			break;
+		case ARGHASH_VERBOSE_LONG:
+		case ARGHASH_VERBOSE_SHORT:
+			cmdarg->is_verbose++;
+			break;
+		case ARGHASH_VERBOSE_ARGEND:
+			/* TODO: keep command line argument */
+			break;
+		case ARGHASH_ACT_STARTSTART:
+			cmdarg->action_code = ARGHASH_ACT_STARTSTART;
+			break;
+		case ARGHASH_ACT_START:
+			cmdarg->action_code = ARGHASH_ACT_START;
+			break;
+		case ARGHASH_ACT_STOP:
+			cmdarg->action_code = ARGHASH_ACT_STOP;
+			break;
+		case ARGHASH_ACT_STATUS:
+		case ARGHASH_ACT_CHECK:
+			cmdarg->action_code = ARGHASH_ACT_STATUS;
+			break;
+	}
+
+	/* TODO: validate command argument */
+
+	return 0;
+}
+
+
 
 #if ENABLE_ARGHASH_CACULATOR
 /* cc -DENABLE_ARGHASH_CACULATOR=1 src/daemonize.c
