@@ -2,24 +2,22 @@
 #include <stdio.h>
 
 
+const char *DEFAULT_INPUT_PATH = "/dev/null";
+const char *DEFAULT_OUTPUT_PATH = "/dev/null";
 
-#define PATH_BUFFER_LEN 128
-#define USERACCOUNT_BUFFER_LEN 32
 
 typedef struct _T_DaemonizeOption {
 	uint32_t action_code;	/* use argument hash as action code */
 
 	char *path_pidfile;
-	char buffer_path_pidfile[PATH_BUFFER_LEN];
 
 	char *run_as_user;
 	char *path_workfolder;
 	char *path_terminallogfile;
-	char buffer_run_as_user[USERACCOUNT_BUFFER_LEN];
-	char buffer_path_workfolder[PATH_BUFFER_LEN];
-	char buffer_path_terminallogfile[PATH_BUFFER_LEN];
 
 	uint32_t second_int_before_term;
+
+	char **cmd;
 
 	uint8_t is_verbose;
 } DaemonizeOption;
@@ -87,12 +85,22 @@ static uint32_t arg_hash(char *p, char **stop_pointer)
 }
 
 
-#define cmdoptcpy(buffer_ptr, value_ptr, arg, buffer_len) {	\
-			strncpy(buffer_ptr, arg, buffer_len);	\
-			buffer_ptr[(buffer_len-1)] = '\0';		\
-			value_ptr = (('\0' == buffer_ptr[0]) ? NULL : buffer_ptr);	}
 
-static int parse_command_arg(DaemonizeOption *cmdarg, int argc, char **argv)
+static void init_daemonize_option(DaemonizeOption *dmnzopt)
+{
+	memset(dmnzopt, 0, sizeof(DaemonizeOption));
+
+	dmnzopt->action_code = 0;
+	dmnzopt->path_pidfile = NULL;
+	dmnzopt->run_as_user = NULL;
+	dmnzopt->path_workfolder = NULL;
+	dmnzopt->path_terminallogfile = NULL;
+	dmnzopt->second_int_before_term = 0;
+	dmnzopt->cmd = NULL;
+	dmnzopt->is_verbose = 0;
+}
+
+static int parse_daemonize_cmdoption(DaemonizeOption *dmnzopt, int argc, char **argv)
 {
 	int i;
 
@@ -104,18 +112,22 @@ static int parse_command_arg(DaemonizeOption *cmdarg, int argc, char **argv)
 		switch(opt)
 		{
 		case ARGHASH_PIDFILE:
-			cmdoptcpy(cmdarg->buffer_path_pidfile, cmdarg->path_pidfile, arg, PATH_BUFFER_LEN);
+			if('\0' != *arg)
+			{ dmnzopt->path_pidfile = arg; }
 			break;
 		case ARGHASH_WORKDIR_LONG:
 		case ARGHASH_WORKDIR_SHORT:
-			cmdoptcpy(cmdarg->buffer_path_workfolder, cmdarg->path_workfolder, arg, PATH_BUFFER_LEN);
+			if('\0' != *arg)
+			{ dmnzopt->path_workfolder = arg; }
 			break;
 		case ARGHASH_TRMLOG_LONG:
 		case ARGHASH_TRMLOG_SHORT:
-			cmdoptcpy(cmdarg->buffer_path_terminallogfile, cmdarg->path_terminallogfile, arg, PATH_BUFFER_LEN);
+			if('\0' != *arg)
+			{ dmnzopt->path_terminallogfile = arg; }
 			break;
 		case ARGHASH_RUN_AS:
-			cmdoptcpy(cmdarg->buffer_run_as_user, cmdarg->run_as_user, arg, USERACCOUNT_BUFFER_LEN);
+			if('\0' != *arg)
+			{ dmnzopt->run_as_user = arg; }
 			break;
 		case ARGHASH_SEND_INT_BEFORE_TERM:
 			{
@@ -124,35 +136,100 @@ static int parse_command_arg(DaemonizeOption *cmdarg, int argc, char **argv)
 				aux = strtol(arg, &endptr, 10);
 				if( ('\0' != *endptr) || (aux < 0) || (aux > 120) )
 				{
-					fprintf(stderr, "ERR: invalid argument for --send-int-before-term=\n");
+					fprintf(stderr, "ERR: invalid argument for option \"--send-int-before-term=\".\n");
 					return 1;
 				}
-				cmdarg->second_int_before_term = aux;
+				dmnzopt->second_int_before_term = aux;
 			}
 			break;
 		case ARGHASH_VERBOSE_LONG:
 		case ARGHASH_VERBOSE_SHORT:
-			cmdarg->is_verbose++;
+			dmnzopt->is_verbose++;
+			if(dmnzopt->is_verbose > 9)
+			{ dmnzopt->is_verbose = 9; }
 			break;
 		case ARGHASH_VERBOSE_ARGEND:
-			/* TODO: keep command line argument */
+			if((i + 1) < argc)
+			{
+				dmnzopt->cmd = argv + i + 1;
+				return 0;
+			}
+			else
+			{
+				fprintf(stderr, "ERR: user command not found.\n");
+				return 1;
+			}
 			break;
 		case ARGHASH_ACT_STARTSTART:
-			cmdarg->action_code = ARGHASH_ACT_STARTSTART;
+			dmnzopt->action_code = ARGHASH_ACT_STARTSTART;
 			break;
 		case ARGHASH_ACT_START:
-			cmdarg->action_code = ARGHASH_ACT_START;
+			dmnzopt->action_code = ARGHASH_ACT_START;
 			break;
 		case ARGHASH_ACT_STOP:
-			cmdarg->action_code = ARGHASH_ACT_STOP;
+			dmnzopt->action_code = ARGHASH_ACT_STOP;
 			break;
 		case ARGHASH_ACT_STATUS:
 		case ARGHASH_ACT_CHECK:
-			cmdarg->action_code = ARGHASH_ACT_STATUS;
+			dmnzopt->action_code = ARGHASH_ACT_STATUS;
 			break;
+		default:
+			fprintf(stderr, "ERR: unknown option: %s\n", argv[i]);
+			return 1;
+		}
 	}
 
-	/* TODO: validate command argument */
+	return 0;
+}
+
+static int valid_daemonize_option(DaemonizeOption *dmnzopt)
+{
+	if(0 == dmnzopt->action_code)
+	{
+		fprintf(stderr, "ERR: action is required.\n");
+		fprintf(stdout,
+			"Argument: [Action] [Options...] -- <Executable> [Parameters...]\n\n"
+			"Action:\n"
+			"  startstart  start program and automatically restart when program stops.\n"
+			"  start       start program without automatically restart.\n"
+			"  stop        stop program via given PID file.\n"
+			"  status      check status of program via given PID file.\n"
+			"Options:\n"
+			"  --pid=[PID_FILE]          save/load process information in given path.\n"
+			"  --working-dir=[WORK_FOLDER] | --wd=[WORK_FOLDER]\n"
+			"                            path of work folder.\n"
+			"  --terminal-log=[LOG_FILE_PATH] | --log=[LOG_FILE_PATH]\n"
+			"                            path of terminal log.\n"
+			"  --run-as=[USER_ACCOUNT]   run program with given user account.\n"
+			"  --send-int-before-term=[SECONDs]\n"
+			"                            send SIGINT before SIGTERM for stopping program.\n"
+			"  -v | --verbose            enable verbose mode.\n"
+			"\n");
+		return 1;
+	}
+
+	if( (ARGHASH_ACT_STARTSTART == dmnzopt->action_code) || (ARGHASH_ACT_START == dmnzopt->action_code) )
+	{
+		if(NULL == dmnzopt->path_pidfile)
+		{ fprintf(stderr, "WARN: PID record file does not given.\n"); }
+
+		if(NULL == dmnzopt->path_terminallogfile)
+		{ dmnzopt->path_terminallogfile = DEFAULT_OUTPUT_PATH; }
+
+		if(NULL == dmnzopt->cmd)
+		{
+			fprintf(stderr, "ERR: program command (executable + parameters) is required.\n");
+			return 1;
+		}
+	}
+	else if( (ARGHASH_ACT_STOP == dmnzopt->action_code) || (ARGHASH_ACT_STATUS == dmnzopt->action_code) )
+	{
+		if(NULL == dmnzopt->path_pidfile)
+		{
+			fprintf(stderr, "ERR: require PID record file.\n");
+			return 1;
+		}
+	}
 
 	return 0;
 }
