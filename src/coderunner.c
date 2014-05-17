@@ -664,13 +664,6 @@ int release_runtime_environment_preservation(CodeRunInstance *instance)
 	return 0;
 }
 
-int destory_coderuninstance(CodeRunInstance *instance)
-{
-	int retcode_1;
-	retcode_1 = release_runtime_environment_preservation(instance);
-	return retcode_1;
-}
-
 #endif	/* ENABLE_RUNTIMEENV_PRESERVE */
 
 

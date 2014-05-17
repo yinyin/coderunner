@@ -50,8 +50,6 @@ int stop_program(CodeRunInstance *instance);
 
 int release_runtime_environment_preservation(CodeRunInstance *instance);
 
-int destory_coderuninstance(CodeRunInstance *instance);
-
 #endif	/* ENABLE_RUNTIMEENV_PRESERVE */
 
 
