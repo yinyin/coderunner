@@ -48,6 +48,8 @@ int stop_program(CodeRunInstance *instance);
 
 #if ENABLE_RUNTIMEENV_PRESERVE
 
+int adapt_preserved_runtime_environment(CodeRunInstance *instance);
+
 int release_runtime_environment_preservation(CodeRunInstance *instance);
 
 #endif	/* ENABLE_RUNTIMEENV_PRESERVE */

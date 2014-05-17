@@ -653,6 +653,23 @@ int stop_program(CodeRunInstance *instance)
 
 #if ENABLE_RUNTIMEENV_PRESERVE
 
+int adapt_preserved_runtime_environment(CodeRunInstance *instance)
+{
+	if(0 != chdir(instance->fullpath_working_directory))
+	{
+		RECORD_ERR("failed on adapt work directory", __FILE__, __LINE__);
+		return 1;
+	}
+
+	if( (instance->runner_uid != geteuid()) || (instance->runner_gid != getegid()) )
+	{
+		if(0 != change_account(instance, instance->runner_uid, instance->runner_gid))
+		{ return 3; }
+	}
+
+	return 0;
+}
+
 int release_runtime_environment_preservation(CodeRunInstance *instance)
 {
 	release_allocated_memory(instance->fullpath_working_directory, instance->fullpath_datafile_stdin, instance->fullpath_logfile_stdout, instance->fullpath_logfile_stderr);
