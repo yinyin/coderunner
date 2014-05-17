@@ -442,6 +442,14 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 
 
 	memset(instance, 0, sizeof(CodeRunInstance));
+#if ENABLE_RUNTIMEENV_PRESERVE
+	instance->fullpath_working_directory = NULL;
+	instance->fullpath_datafile_stdin = NULL;
+	instance->fullpath_logfile_stdout = NULL;
+	instance->fullpath_logfile_stderr = NULL;
+	instance->runner_uid = 0;
+	instance->runner_gid = 0;
+#endif	/* ENABLE_RUNTIMEENV_PRESERVE */
 
 	if(0 != check_working_directory(instance, working_directory, &fullpath_working_directory))
 	{
@@ -472,7 +480,16 @@ int run_program(CodeRunInstance *instance, const char *filename, char *const arg
 	else if(0 != child_pid)
 	{
 		fill_instance_structure(instance, max_running_second, overtime_sigint_second, overtime_sigterm_second, child_pid);
+#if ENABLE_RUNTIMEENV_PRESERVE
+		instance->fullpath_working_directory = fullpath_working_directory;
+		instance->fullpath_datafile_stdin = fullpath_datafile_stdin;
+		instance->fullpath_logfile_stdout = fullpath_logfile_stdout;
+		instance->fullpath_logfile_stderr = fullpath_logfile_stderr;
+		instance->runner_uid = runner_uid;
+		instance->runner_gid = runner_gid;
+#else	/* ENABLE_RUNTIMEENV_PRESERVE */
 		RELEASE_ALLOCATED_RESOURCE;
+#endif	/* ENABLE_RUNTIMEENV_PRESERVE */
 		return 0;
 	}
 
@@ -631,6 +648,30 @@ int stop_program(CodeRunInstance *instance)
 
 	return stop_program_impl(instance, current_tstamp);
 }
+
+
+
+#if ENABLE_RUNTIMEENV_PRESERVE
+
+int release_runtime_environment_preservation(CodeRunInstance *instance)
+{
+	release_allocated_memory(instance->fullpath_working_directory, instance->fullpath_datafile_stdin, instance->fullpath_logfile_stdout, instance->fullpath_logfile_stderr);
+	instance->fullpath_working_directory = NULL;
+	instance->fullpath_datafile_stdin = NULL;
+	instance->fullpath_logfile_stdout = NULL;
+	instance->fullpath_logfile_stderr = NULL;
+
+	return 0;
+}
+
+int destory_coderuninstance(CodeRunInstance *instance)
+{
+	int retcode_1;
+	retcode_1 = release_runtime_environment_preservation(instance);
+	return retcode_1;
+}
+
+#endif	/* ENABLE_RUNTIMEENV_PRESERVE */
 
 
 
