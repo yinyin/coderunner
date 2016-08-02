@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 
 import os
@@ -16,7 +17,7 @@ extcoderunner_include = ['include', "python/ext/object_impl",]
 
 
 setup(name='childprocess',
-		version='1.0',
+		version='1.1.0',
 		description='Class for creating and waiting for child processes complete',
 		ext_modules=[
 			Extension("coderunner", extcoderunner_src, include_dirs=extcoderunner_include)
