@@ -643,8 +643,8 @@ int stop_program(CodeRunInstance *instance)
 
 	current_tstamp = get_current_tstamp(instance);
 
-	instance->tstamp_onstop_sigint = (instance->tstamp_onstop_sigint - instance->tstamp_bound) + current_tstamp;
-	instance->tstamp_onstop_sigterm = (instance->tstamp_onstop_sigterm - instance->tstamp_bound) + current_tstamp;
+	instance->tstamp_onstop_sigint = (instance->tstamp_onstop_sigint - instance->tstamp_start) + current_tstamp;
+	instance->tstamp_onstop_sigterm = (instance->tstamp_onstop_sigterm - instance->tstamp_start) + current_tstamp;
 
 	return stop_program_impl(instance, current_tstamp);
 }
