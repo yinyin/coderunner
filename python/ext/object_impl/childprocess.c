@@ -28,6 +28,7 @@ static PyObject * ChildProcess_wait_blocking(coderunner_ChildProcessObject *self
 static PyObject * ChildProcess_wait_nonblocking(coderunner_ChildProcessObject *self);
 static PyObject * ChildProcess_stop(coderunner_ChildProcessObject *self);
 static PyObject * ChildProcess_get_result(coderunner_ChildProcessObject *self);
+static PyObject * ChildProcess_get_process_id(coderunner_ChildProcessObject *self);
 /* }}} forward declares */
 
 
@@ -392,6 +393,13 @@ static PyObject * ChildProcess_get_result(coderunner_ChildProcessObject *self)
 	{
 		return PyTuple_Pack(2, Py_None, PyInt_FromLong(self->childprocess_instance.stop_signal));
 	}
+}
+
+
+static PyObject * ChildProcess_get_process_id(coderunner_ChildProcessObject *self)
+{
+	PY_LONG_LONG process_id = (PY_LONG_LONG)(self->childprocess_instance.child_pid);
+	return PyLong_FromLongLong(process_id);
 }
 
 

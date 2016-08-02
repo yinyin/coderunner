@@ -61,6 +61,8 @@ static PyMethodDef coderunner_ChildProcess_methods[] = {
 		"Stop running program. Need call wait_* method after invoke this method to collect exit code." },
 	{"get_result", (PyCFunction)ChildProcess_get_result, METH_NOARGS,
 		"Receiving result of program. A two element tuple would be returned." },
+	{"get_process_id", (PyCFunction)ChildProcess_get_process_id, METH_NOARGS,
+		"Get process identifier of running program." },
 	{NULL}  /* Sentinel */
 };
 
